@@ -10,7 +10,7 @@ import { FileText, Upload, Trash2, Download, Eye, AlertTriangle, ShieldCheck, Ch
 interface BeneficiaryDocumentsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  beneficiaryId: string;
+  beneficiaryId: string | null;
   beneficiaryName: string;
 }
 
@@ -77,7 +77,7 @@ export const BeneficiaryDocumentsModal: React.FC<BeneficiaryDocumentsModalProps>
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) {
+    if (!selectedFile || !beneficiaryId) {
       setErrorMsg('Please select a valid document file.');
       return;
     }
