@@ -1,2 +1,21 @@
+# Dependencies
 node_modules/
+
+# Next.js Build & Generated Artifacts
+.next/
+out/
+build/
+dist/
+
+# Environment Configuration
+.env
 .env.local
+.env*.local
+
+# Testing & Coverage
+coverage/
+.vitest/
+
+# OS & IDE Files
+.DS_Store
+*.log
