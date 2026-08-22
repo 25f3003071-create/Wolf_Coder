@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manager Audit Trail — ReliefTrack</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: { 950: '#020617', 900: '#090d16', 800: '#1e293b' },
+            emerald: { 400: '#34d399', 500: '#10b981', 600: '#059669' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between text-xs">
+
+  <header class="sticky top-0 z-40 w-full bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <a href="manager.html" class="flex items-center gap-2.5">
+        <div class="p-2 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+        </div>
+        <span class="text-lg font-black tracking-tight text-white">Relief<span class="text-emerald-400">Track</span></span>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-3">
+        <a href="manager.html" class="text-slate-400 hover:text-slate-200">Hub</a>
+        <a href="manager-vault.html" class="text-slate-400 hover:text-slate-200">Vault</a>
+        <a href="manager-audit.html" class="text-emerald-400 font-bold border-b-2 border-emerald-400 pb-1">Audit Trail</a>
+        <a href="manager-blockchain.html" class="text-slate-400 hover:text-slate-200">Ledger</a>
+        <a href="manager-fraud.html" class="text-slate-400 hover:text-slate-200">Fraud Alert</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <button onclick="ReliefTrack.logout()" class="btn btn-outline btn-sm">Logout</button>
+        <button id="wallet-connect-btn" onclick="openWalletModal()" class="btn btn-primary btn-sm">Connect Wallet</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6 flex-grow">
+    <div class="space-y-1">
+      <h1 class="text-2xl font-black text-slate-100">Manager Audit Trail</h1>
+      <p class="text-slate-400">Complete Timestamped System Audit Logs</p>
+    </div>
+
+    <div class="card-panel">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-slate-300">
+          <thead class="text-[11px] uppercase bg-slate-950/60 text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="p-2.5">Timestamp</th>
+              <th class="p-2.5">Action</th>
+              <th class="p-2.5">Actor</th>
+              <th class="p-2.5">Details</th>
+              <th class="p-2.5">Proof Hash</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/80 font-mono text-xs">
+            <tr class="hover:bg-slate-900/50">
+              <td class="p-2.5 text-slate-400">2026-08-23 03:45 UTC</td>
+              <td class="p-2.5 font-bold text-emerald-400">FUNDS_ALLOCATED</td>
+              <td class="p-2.5 text-slate-200">Manager Admin</td>
+              <td class="p-2.5 text-slate-300">₹8,500 allocated to NGO-1042 for BEN-72A91</td>
+              <td class="p-2.5 text-slate-400">0x7a89b2...41c8</td>
+            </tr>
+            <tr class="hover:bg-slate-900/50">
+              <td class="p-2.5 text-slate-400">2026-08-23 02:12 UTC</td>
+              <td class="p-2.5 font-bold text-sky-400">BENEFICIARY_VERIFIED</td>
+              <td class="p-2.5 text-slate-200">Manager Admin</td>
+              <td class="p-2.5 text-slate-300">Hospital estimate verified for BEN-72A91</td>
+              <td class="p-2.5 text-slate-400">0x3f12a8...99e1</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-t border-slate-800/80 bg-slate-950/60 py-6 text-center text-slate-500">
+    © 2026 ReliefTrack Protocol
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

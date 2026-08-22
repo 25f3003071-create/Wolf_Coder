@@ -1,34 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  process.env.SUPABASE_URL ||
-  'https://your-project.supabase.co';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  process.env.SUPABASE_ANON_KEY ||
-  'mock-key';
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-anon-key'
+);
 
-export const isSupabaseConfigured = () => {
-  return (
-    supabaseUrl !== 'https://your-project.supabase.co' &&
-    supabaseUrl !== 'http://127.0.0.1:54321' &&
-    supabaseAnonKey !== 'mock-key'
-  );
-};
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-/**
- * Server-side Supabase client using Secret Key / Service Role Key for administrative operations
- */
 export function getServiceSupabase() {
-  const secretKey =
-    process.env.SUPABASE_SECRET_KEY ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    supabaseAnonKey;
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Supabase service role configuration is missing. Set SUPABASE_SERVICE_ROLE_KEY in .env.local');
+  }
+  return createClient(supabaseUrl, supabaseServiceKey);
+}
 
-  return createClient(supabaseUrl, secretKey);
+export function isSupabaseConfigured(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }

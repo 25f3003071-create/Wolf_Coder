@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { DatabaseRepository } from '../../src/lib/db/repository';
-import { dbMemory } from '../../src/backend/services/memory-store';
+import { dbMemory } from '../../src/lib/db/memory-store';
 
 describe('NGO Beneficiary Management & Financial Disbursement Unit Tests', () => {
   beforeEach(() => {

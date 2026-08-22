@@ -20,13 +20,13 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@/frontend/*": ["./frontend/src/*", "./src/frontend/*"],
-      "@/backend/*": ["./backend/src/*", "./src/backend/*"],
-      "@/components/*": ["./frontend/src/components/*", "./src/frontend/components/*"],
-      "@/lib/*": ["./src/lib/*", "./backend/src/*"],
-      "@/types": ["./frontend/src/types/index.ts", "./src/frontend/types/index.ts"]
+      "@/frontend/*": ["./frontend/src/*"],
+      "@/backend/*": ["./src/lib/*"],
+      "@/components/*": ["./frontend/src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/types": ["./src/types/index.ts"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "contracts", "blockchain"]
+  "exclude": ["node_modules", "contracts"]
 }

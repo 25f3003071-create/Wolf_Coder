@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — ReliefTrack</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: { 950: '#020617', 900: '#090d16', 800: '#1e293b' },
+            emerald: { 400: '#34d399', 500: '#10b981', 600: '#059669' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between text-xs">
+
+  <header class="sticky top-0 z-40 w-full bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-2.5">
+        <div class="p-2 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+        </div>
+        <span class="text-lg font-black tracking-tight text-white">Relief<span class="text-emerald-400">Track</span></span>
+      </a>
+    </div>
+  </header>
+
+  <main class="flex-grow flex items-center justify-center px-4 py-10">
+    <div class="w-full max-w-md space-y-5">
+      <div class="text-center space-y-1.5">
+        <div class="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 inline-block">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+        </div>
+        <h1 id="login-role-title" class="text-2xl font-black text-slate-100">Authentication</h1>
+        <span id="role-badge" class="badge badge-info">Role Access</span>
+      </div>
+
+      <div class="card-panel">
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-950 border border-slate-800">
+            <button type="button" id="btn-auth-pass" onclick="toggleAuthTab('pass')" class="py-1.5 rounded-lg font-bold bg-emerald-950/50 border border-emerald-500/50 text-emerald-400">Password Auth</button>
+            <button type="button" id="btn-auth-otp" onclick="toggleAuthTab('otp')" class="py-1.5 rounded-lg font-bold text-slate-400">Mobile / Email OTP</button>
+          </div>
+
+          <!-- Password Form -->
+          <form id="form-password-login" onsubmit="handlePasswordLogin(event)" class="space-y-3">
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Email</label>
+              <input type="email" id="login-email" required class="input-field font-mono" value="donor@relieftrack.org">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Password</label>
+              <input type="password" id="login-password" required class="input-field font-mono" value="password123">
+            </div>
+            <button type="submit" class="btn btn-primary btn-md w-full">
+              Authenticate &amp; Launch Dashboard
+            </button>
+          </form>
+
+          <!-- OTP Form (Hidden by default) -->
+          <div id="form-otp-container" class="space-y-3 hidden">
+            <div id="otp-step-1" class="space-y-3">
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Mobile or Email</label>
+                <input type="text" id="otp-target" required class="input-field font-mono" value="+91 98765 43210">
+              </div>
+              <button type="button" onclick="sendOtp()" class="btn btn-primary btn-md w-full">
+                Send Verification OTP
+              </button>
+            </div>
+            <form id="otp-step-2" onsubmit="handleOtpSubmit(event)" class="space-y-3 hidden">
+              <div class="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-300">
+                OTP sent successfully to target contact.
+              </div>
+              <div class="p-2.5 rounded-lg bg-amber-950/40 border border-amber-500/40 text-amber-300 font-mono">
+                <p class="font-bold">Development Mode Code: 123456</p>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Enter 6-Digit OTP</label>
+                <input type="text" id="otp-code" maxlength="6" required placeholder="123456" class="input-field text-emerald-400 font-mono font-bold tracking-widest text-center text-lg">
+              </div>
+              <button type="submit" class="btn btn-primary btn-md w-full">
+                Verify OTP &amp; Continue
+              </button>
+            </form>
+          </div>
+
+          <div class="pt-3 border-t border-slate-800 flex justify-between text-slate-400">
+            <a href="index.html" class="hover:text-slate-200 underline flex items-center gap-1">← Change Role</a>
+            <div>Don't have an account? <a href="register.html" class="text-emerald-400 font-bold hover:underline">Register</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-t border-slate-800/80 bg-slate-950/60 py-6 text-center text-slate-500">
+    © 2026 ReliefTrack Protocol
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const role = params.get('role') || sessionStorage.getItem('relieftrack_target_role') || 'DONOR';
+    
+    document.getElementById('login-role-title').innerText = `${role} Authentication`;
+    const badge = document.getElementById('role-badge');
+    badge.innerText = `Role: ${role} Access`;
+    badge.className = `badge ${role === 'DONOR' ? 'badge-success' : role === 'NGO' ? 'badge-info' : 'badge-warning'}`;
+
+    if (role === 'DONOR') document.getElementById('login-email').value = 'donor@relieftrack.org';
+    else if (role === 'NGO') document.getElementById('login-email').value = 'ngo@redcrossrelief.org';
+    else if (role === 'MANAGER') document.getElementById('login-email').value = 'admin@relieftrack.org';
+
+    function toggleAuthTab(type) {
+      if (type === 'pass') {
+        document.getElementById('form-password-login').classList.remove('hidden');
+        document.getElementById('form-otp-container').classList.add('hidden');
+        document.getElementById('btn-auth-pass').className = 'py-1.5 rounded-lg font-bold bg-emerald-950/50 border border-emerald-500/50 text-emerald-400';
+        document.getElementById('btn-auth-otp').className = 'py-1.5 rounded-lg font-bold text-slate-400';
+      } else {
+        document.getElementById('form-password-login').classList.add('hidden');
+        document.getElementById('form-otp-container').classList.remove('hidden');
+        document.getElementById('btn-auth-otp').className = 'py-1.5 rounded-lg font-bold bg-emerald-950/50 border border-emerald-500/50 text-emerald-400';
+        document.getElementById('btn-auth-pass').className = 'py-1.5 rounded-lg font-bold text-slate-400';
+      }
+    }
+
+    function sendOtp() {
+      document.getElementById('otp-step-1').classList.add('hidden');
+      document.getElementById('otp-step-2').classList.remove('hidden');
+    }
+
+    function handlePasswordLogin(e) {
+      e.preventDefault();
+      ReliefTrack.saveSession(role);
+      redirectToDashboard(role);
+    }
+
+    function handleOtpSubmit(e) {
+      e.preventDefault();
+      ReliefTrack.saveSession(role);
+      redirectToDashboard(role);
+    }
+
+    function redirectToDashboard(userRole) {
+      if (userRole === 'DONOR') window.location.href = 'donor.html';
+      else if (userRole === 'NGO') window.location.href = 'ngo.html';
+      else if (userRole === 'MANAGER') window.location.href = 'manager.html';
+    }
+  </script>
+</body>
+</html>

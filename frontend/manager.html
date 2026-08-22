@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manager Hub — ReliefTrack</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: { 950: '#020617', 900: '#090d16', 800: '#1e293b' },
+            emerald: { 400: '#34d399', 500: '#10b981', 600: '#059669' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between text-xs">
+
+  <header class="sticky top-0 z-40 w-full bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <a href="manager.html" class="flex items-center gap-2.5">
+        <div class="p-2 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+        </div>
+        <span class="text-lg font-black tracking-tight text-white">Relief<span class="text-emerald-400">Track</span></span>
+      </a>
+
+      <!-- Sub-Nav Links -->
+      <nav class="hidden md:flex items-center gap-3">
+        <a href="manager.html" class="text-emerald-400 font-bold border-b-2 border-emerald-400 pb-1">Hub</a>
+        <a href="manager-vault.html" class="text-slate-400 hover:text-slate-200">Vault</a>
+        <a href="manager-audit.html" class="text-slate-400 hover:text-slate-200">Audit Trail</a>
+        <a href="manager-blockchain.html" class="text-slate-400 hover:text-slate-200">Ledger</a>
+        <a href="manager-fraud.html" class="text-slate-400 hover:text-slate-200">Fraud Alert</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-mono text-purple-400">
+          <strong class="text-slate-200">MANAGER</strong>
+        </span>
+        <button onclick="ReliefTrack.logout()" class="btn btn-outline btn-sm">Logout</button>
+        <button id="wallet-connect-btn" onclick="openWalletModal()" class="btn btn-primary btn-sm">Connect Wallet</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6 flex-grow">
+    
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-black text-slate-100 flex items-center gap-2">
+          Verification Vault &amp; Manager Operations
+        </h1>
+        <p class="text-slate-400 mt-0.5">Platform Verification Auditor &amp; Fraud Surveillance Portal</p>
+      </div>
+      <button onclick="openModal('allocate-modal')" class="btn btn-primary btn-sm">⚡ Allocate Campaign Funds</button>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="card-panel border-l-4 border-l-sky-500">
+        <p class="text-slate-400 text-xs font-semibold">PENDING VERIFICATIONS</p>
+        <h2 class="text-xl font-black text-slate-100 mt-1">3 Cases</h2>
+        <p class="text-[11px] text-slate-400 mt-2">Awaiting audit</p>
+      </div>
+      <div class="card-panel border-l-4 border-l-emerald-500">
+        <p class="text-slate-400 text-xs font-semibold">ACTIVE FRAUD FLAGS</p>
+        <h2 class="text-xl font-black text-slate-100 mt-1">0 Critical</h2>
+        <p class="text-[11px] text-slate-400 mt-2">Real-time surveillance active</p>
+      </div>
+      <div class="card-panel border-l-4 border-l-purple-500">
+        <p class="text-slate-400 text-xs font-semibold">CAMPAIGN ALLOCATIONS</p>
+        <h2 class="text-xl font-black text-slate-100 mt-1">₹2,85,000</h2>
+        <p class="text-[11px] text-slate-400 mt-2">Approved NGO pool</p>
+      </div>
+      <div class="card-panel border-l-4 border-l-amber-500">
+        <p class="text-slate-400 text-xs font-semibold">AUDIT LOGS ANCHORED</p>
+        <h2 class="text-xl font-black text-slate-100 mt-1">1,248 Entries</h2>
+        <p class="text-[11px] text-slate-400 mt-2">Immutable proofs</p>
+      </div>
+    </div>
+
+    <!-- Queue Table -->
+    <div class="card-panel">
+      <div class="mb-4">
+        <h3 class="text-base font-bold text-slate-100">Beneficiary Verification Queue</h3>
+        <p class="text-slate-400 text-xs">Verify registered beneficiary eligibility and inspect uploaded documents</p>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-slate-300">
+          <thead class="text-[11px] uppercase bg-slate-950/60 text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="p-2.5">Beneficiary ID</th>
+              <th class="p-2.5">NGO</th>
+              <th class="p-2.5">Hospital</th>
+              <th class="p-2.5">Est. Cost</th>
+              <th class="p-2.5">Status</th>
+              <th class="p-2.5 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="manager-queue-body" class="divide-y divide-slate-800/80 font-medium">
+            <tr class="hover:bg-slate-900/50">
+              <td class="p-2.5 font-mono font-bold text-emerald-400">BEN-72A91</td>
+              <td class="p-2.5 font-semibold text-slate-200">Red Cross India</td>
+              <td class="p-2.5 text-slate-300">XYZ Super Specialty Hospital</td>
+              <td class="p-2.5 font-extrabold text-slate-100">₹78,500</td>
+              <td class="p-2.5"><span class="badge badge-success">VERIFIED</span></td>
+              <td class="p-2.5 text-right">
+                <div class="flex items-center justify-end gap-1">
+                  <button onclick="openVaultModal('BEN-72A91')" class="btn btn-outline btn-sm">Vault Evidence</button>
+                </div>
+              </td>
+            </tr>
+            <tr class="hover:bg-slate-900/50">
+              <td class="p-2.5 font-mono font-bold text-emerald-400">BEN-99C03</td>
+              <td class="p-2.5 font-semibold text-slate-200">Care Foundation</td>
+              <td class="p-2.5 text-slate-300">District Care Unit</td>
+              <td class="p-2.5 font-extrabold text-slate-100">₹25,000</td>
+              <td class="p-2.5"><span class="badge badge-warning">UNDER_REVIEW</span></td>
+              <td class="p-2.5 text-right">
+                <div class="flex items-center justify-end gap-1">
+                  <button onclick="openVaultModal('BEN-99C03')" class="btn btn-outline btn-sm">Vault Evidence</button>
+                  <button onclick="approveBen('BEN-99C03')" class="btn btn-primary btn-sm">Approve</button>
+                  <button onclick="rejectBen('BEN-99C03')" class="btn btn-danger btn-sm">Reject</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Allocate Funds Modal -->
+  <div id="allocate-modal" class="modal-backdrop">
+    <div class="modal-content max-w-md p-6">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div>
+          <h3 class="text-lg font-black text-slate-100">Allocate Campaign Funds</h3>
+          <p class="text-xs text-slate-400">Allocate approved pool funds to an NGO for a beneficiary</p>
+        </div>
+        <button onclick="closeModal('allocate-modal')" class="text-slate-400">✕</button>
+      </div>
+
+      <form onsubmit="handleAllocateSubmit(event)" class="space-y-3 pt-4 text-xs">
+        <div>
+          <label class="block font-semibold mb-1">Target NGO *</label>
+          <select class="select-field">
+            <option>NGO-1042 — Red Cross Relief India</option>
+            <option>NGO-2089 — Care Foundation India</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Target Beneficiary ID *</label>
+          <input type="text" required value="BEN-72A91" class="input-field font-mono">
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Allocation Amount (₹) *</label>
+          <input type="number" required value="8500" class="input-field font-bold text-emerald-400">
+        </div>
+        <div class="flex justify-end gap-3 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeModal('allocate-modal')" class="btn btn-outline btn-md">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-md">Approve &amp; Allocate Funds</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Verification Vault Inspection Modal -->
+  <div id="vault-modal" class="modal-backdrop">
+    <div class="modal-content max-w-xl p-6">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div>
+          <h3 class="text-lg font-black text-slate-100">Verification Vault Evidence</h3>
+          <p class="text-xs text-slate-400" id="vault-modal-subtitle">Inspecting Beneficiary Evidence</p>
+        </div>
+        <button onclick="closeModal('vault-modal')" class="text-slate-400">✕</button>
+      </div>
+
+      <div class="space-y-4 pt-4 text-xs">
+        <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2 font-mono">
+          <div class="flex justify-between pb-1 border-b border-slate-800"><span class="text-slate-400">Document Type</span><span class="text-emerald-400 font-bold">Hospital Estimate Invoice</span></div>
+          <div class="flex justify-between pb-1 border-b border-slate-800"><span class="text-slate-400">IPFS CID Hash</span><span class="text-slate-200">QmX7a9B2c4e...8f91</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Hospital License</span><span class="text-slate-200">REG-HOSP-2026-88</span></div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/20 text-emerald-300">
+          <p class="font-bold mb-1">✓ Automated Verification Checks Passed</p>
+          <p class="text-[11px] leading-relaxed">Cross-matched hospital bill total with diagnosis record. Smart contract integrity verified.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="border-t border-slate-800/80 bg-slate-950/60 py-6 text-center text-slate-500">
+    © 2026 ReliefTrack Protocol
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    function openVaultModal(benId) {
+      document.getElementById('vault-modal-subtitle').innerText = `Inspecting Evidence for ${benId}`;
+      openModal('vault-modal');
+    }
+
+    function approveBen(benId) {
+      alert(`Beneficiary ${benId} approved successfully!`);
+    }
+
+    function rejectBen(benId) {
+      alert(`Beneficiary ${benId} rejected.`);
+    }
+
+    function handleAllocateSubmit(e) {
+      e.preventDefault();
+      closeModal('allocate-modal');
+      alert('Campaign funds allocated successfully!');
+    }
+  </script>
+</body>
+</html>

@@ -1,11 +1,12 @@
 # Dependencies
 node_modules/
 
-# Next.js Build & Generated Artifacts
+# Next.js & TypeScript Build & Generated Artifacts
 .next/
 out/
 build/
 dist/
+*.tsbuildinfo
 
 # Environment Configuration
 .env
@@ -16,6 +17,14 @@ dist/
 coverage/
 .vitest/
 
-# OS & IDE Files
+# OS, Temp & Log Files
 .DS_Store
 *.log
+*.tmp
+*.temp
+*.bak
+*.old
+*.backup
+*.swp
+*.swo
+*~
