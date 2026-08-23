@@ -54,32 +54,32 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block font-semibold text-slate-300 mb-1">Full Name / Org Name *</label>
-              <input type="text" required placeholder="e.g. Rahul Sharma" class="input-field">
+              <input type="text" id="reg-name" required placeholder="e.g. Rahul Sharma / Hope NGO" class="input-field">
             </div>
             <div>
               <label class="block font-semibold text-slate-300 mb-1">Email Address *</label>
-              <input type="email" required placeholder="name@domain.org" class="input-field">
+              <input type="email" id="reg-email" required placeholder="name@domain.org" class="input-field">
             </div>
             <div>
               <label class="block font-semibold text-slate-300 mb-1">Phone Number *</label>
-              <input type="tel" required placeholder="+91 98765 43210" class="input-field">
+              <input type="tel" id="reg-phone" required placeholder="+91 98765 43210" class="input-field">
             </div>
             <div>
               <label class="block font-semibold text-slate-300 mb-1">Password *</label>
-              <input type="password" required minlength="8" class="input-field">
+              <input type="password" id="reg-password" required minlength="6" class="input-field">
             </div>
           </div>
 
           <div id="ngo-extra-fields" class="space-y-3 p-3 rounded-xl bg-slate-950 border border-slate-800 hidden">
-            <p class="font-bold text-emerald-400 uppercase text-[10px]">NGO Credentials</p>
+            <p class="font-bold text-emerald-400 uppercase text-[10px]">NGO Credentials &amp; Verification</p>
             <div>
-              <label class="block font-semibold text-slate-300 mb-1">80G / FCRA Registration Number</label>
-              <input type="text" placeholder="AAATC1234F2026" class="input-field">
+              <label class="block font-semibold text-slate-300 mb-1">80G / FCRA Registration Number *</label>
+              <input type="text" id="reg-fcra" placeholder="80G-AAATC1234F2026" class="input-field">
             </div>
           </div>
 
           <button type="submit" class="btn btn-primary btn-md w-full">
-            Register &amp; Access Protocol
+            Register &amp; Sync with Manager Hub
           </button>
 
           <div class="pt-3 border-t border-slate-800 text-center text-slate-400">
@@ -98,14 +98,43 @@
   <script>
     function toggleRegRole(role) {
       const extra = document.getElementById('ngo-extra-fields');
-      if (role === 'NGO') extra.classList.remove('hidden');
-      else extra.classList.add('hidden');
+      const fcraInput = document.getElementById('reg-fcra');
+      if (role === 'NGO') {
+        extra.classList.remove('hidden');
+        if (fcraInput) fcraInput.required = true;
+      } else {
+        extra.classList.add('hidden');
+        if (fcraInput) fcraInput.required = false;
+      }
     }
 
     function handleRegister(e) {
       e.preventDefault();
       const role = document.getElementById('reg-role').value;
-      ReliefTrack.saveSession(role);
+      const name = document.getElementById('reg-name').value;
+      const email = document.getElementById('reg-email').value;
+      const phone = document.getElementById('reg-phone').value;
+      const regNumber = document.getElementById('reg-fcra') ? document.getElementById('reg-fcra').value : '';
+
+      // Register into shared store (Synced with Manager & all portals)
+      const registeredUser = ReliefTrackStore.registerUser({
+        name,
+        role,
+        email,
+        phone,
+        regNumber
+      });
+
+      // Save active session
+      ReliefTrack.saveSession(role, {
+        email: email,
+        full_name: name,
+        id: registeredUser.id,
+        role: role
+      });
+
+      alert(`Account created successfully as ${role} (${name})!\nRegistration details synced with Manager Registry.`);
+
       if (role === 'DONOR') window.location.href = 'donor.html';
       else if (role === 'NGO') window.location.href = 'ngo.html';
       else if (role === 'MANAGER') window.location.href = 'manager.html';
