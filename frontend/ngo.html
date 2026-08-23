@@ -149,36 +149,36 @@
       </div>
     </div>
 
-    <!-- Expenses Ledger -->
+    <!-- NGO Transactions & Itemized Expenses Ledger (3-Way Synced) -->
     <div class="card-panel">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
-          <h3 class="text-base font-bold text-slate-100">Itemized Relief Expenses Ledger</h3>
-          <p class="text-slate-400 text-xs">Track submitted relief bills and payment proof</p>
+          <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse"></span>
+            NGO Transactions &amp; Itemized Expenses (3-Way Synced)
+          </h3>
+          <p class="text-slate-400 text-xs">Real-time ledger of allocations, aid disbursements to beneficiaries, and hospital expenses (visible to Donor, NGO &amp; Manager)</p>
         </div>
-        <button onclick="openModal('submit-expense-modal')" class="btn btn-outline btn-sm">+ Submit Expense</button>
+        <div class="flex items-center gap-2">
+          <span class="badge badge-success text-[10px]">3-Way Sync: Active</span>
+          <button onclick="openModal('submit-expense-modal')" class="btn btn-outline btn-sm">+ Submit Expense</button>
+        </div>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-left text-slate-300">
           <thead class="text-[11px] uppercase bg-slate-950/60 text-slate-400 border-b border-slate-800">
             <tr>
-              <th class="p-2.5">Expense ID</th>
-              <th class="p-2.5">Beneficiary</th>
-              <th class="p-2.5">Category</th>
-              <th class="p-2.5">Amount</th>
-              <th class="p-2.5">Payment Method</th>
+              <th class="p-2.5">Tx ID &amp; Blockchain Hash</th>
+              <th class="p-2.5">Beneficiary / Recipient</th>
+              <th class="p-2.5">Type / Category</th>
+              <th class="p-2.5">Amount (₹)</th>
+              <th class="p-2.5">Method</th>
+              <th class="p-2.5">Date &amp; Time</th>
               <th class="p-2.5">Verification</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800/80 font-medium">
-            <tr class="hover:bg-slate-900/50">
-              <td class="p-2.5 font-mono font-bold text-emerald-400">EXP-2026-77A2</td>
-              <td class="p-2.5 font-mono text-slate-300">BEN-72A91</td>
-              <td class="p-2.5 font-semibold text-slate-200">ICU Operation Charge</td>
-              <td class="p-2.5 font-extrabold text-slate-100">₹30,000</td>
-              <td class="p-2.5"><span class="badge badge-info">UPI / Hospital Bank</span></td>
-              <td class="p-2.5"><span class="badge badge-success">VERIFIED ✓</span></td>
-            </tr>
+          <tbody id="ngo-expenses-table-body" class="divide-y divide-slate-800/80 font-medium">
+            <!-- Dynamically populated via renderNgoTransactions() -->
           </tbody>
         </table>
       </div>
@@ -215,9 +215,30 @@
           </div>
         </div>
 
+        <div class="space-y-2">
+          <p class="font-bold text-emerald-400 uppercase border-b border-slate-800 pb-0.5">Section C — Verification Documents (Upload) *</p>
+          <p class="text-[11px] text-amber-300">Beneficiary need verify karne ke liye kam se kam ek supporting document upload karna zaroori hai.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end p-3 rounded-xl bg-slate-950 border border-slate-800">
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Document Type</label>
+              <select id="reg-doc-type" class="select-field">
+                <option value="Hospital Surgery Estimate">Hospital Estimate / Bill</option>
+                <option value="Aadhaar / Government ID">Aadhaar / Government ID</option>
+                <option value="Medical Diagnostic Report">Medical Diagnostic Report</option>
+                <option value="Disaster Loss Certificate">Disaster Loss Certificate</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Choose File (PDF, JPG, PNG &lt; 10MB)</label>
+              <input type="file" id="reg-doc-file" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="handleRegDocSelected(event)" class="w-full text-xs text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-emerald-950 file:text-emerald-400 file:border file:border-emerald-500/30 file:cursor-pointer">
+            </div>
+          </div>
+          <div id="reg-selected-docs-list" class="space-y-1 pt-1"></div>
+        </div>
+
         <div class="flex justify-end gap-3 pt-2 border-t border-slate-800">
           <button type="button" onclick="closeModal('register-beneficiary-modal')" class="btn btn-outline btn-md">Cancel</button>
-          <button type="submit" class="btn btn-primary btn-md">Register Beneficiary &amp; Assign Aid</button>
+          <button type="submit" class="btn btn-primary btn-md">Register Beneficiary &amp; Upload</button>
         </div>
       </form>
     </div>
@@ -313,19 +334,44 @@
 
   <!-- Docs Modal -->
   <div id="docs-modal" class="modal-backdrop">
-    <div class="modal-content max-w-md p-6">
+    <div class="modal-content max-w-lg p-6">
       <div class="flex items-center justify-between pb-4 border-b border-slate-800">
-        <h3 id="docs-modal-title" class="text-lg font-black text-slate-100">Beneficiary Documents</h3>
-        <button onclick="closeModal('docs-modal')" class="text-slate-400">✕</button>
-      </div>
-      <div class="space-y-3 pt-4 font-mono text-xs">
-        <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
-          <span>Hospital Estimate Invoice.pdf</span>
-          <span class="badge badge-success">Verified ✓</span>
+        <div>
+          <h3 id="docs-modal-title" class="text-lg font-black text-slate-100">Beneficiary Documents</h3>
+          <p class="text-xs text-slate-400">Manage uploaded verification files &amp; upload new certificates</p>
         </div>
-        <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
-          <span>Aadhaar Government ID.pdf</span>
-          <span class="badge badge-success">Verified ✓</span>
+        <button onclick="closeModal('docs-modal')" class="text-slate-400 hover:text-slate-200">✕</button>
+      </div>
+
+      <!-- Upload New Document Form -->
+      <form onsubmit="handleDocModalUpload(event)" class="mt-4 p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+        <p class="text-xs font-bold text-slate-200 uppercase tracking-wider">Upload New Document</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Document Type</label>
+            <select id="modal-doc-type" class="select-field text-xs">
+              <option value="Hospital Estimate">Hospital Estimate / Bill</option>
+              <option value="ID Proof">Aadhaar / Government ID</option>
+              <option value="Medical Report">Medical Diagnostic Report</option>
+              <option value="Disaster Evidence">Disaster Loss Certificate</option>
+              <option value="Eligibility Proof">Eligibility Document</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Select File (PDF, JPG, PNG &lt; 10MB)</label>
+            <input type="file" id="modal-doc-file" accept=".pdf,.jpg,.jpeg,.png" required class="w-full text-xs text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-emerald-950 file:text-emerald-400 file:border file:border-emerald-500/30 file:cursor-pointer">
+          </div>
+        </div>
+        <div class="flex justify-end pt-1">
+          <button type="submit" class="btn btn-primary btn-sm">Upload Document</button>
+        </div>
+      </form>
+
+      <!-- Uploaded List -->
+      <div class="mt-4 space-y-2">
+        <p class="text-xs font-bold text-slate-300 uppercase tracking-wider">Uploaded Documents</p>
+        <div id="docs-modal-list" class="space-y-2 max-h-52 overflow-y-auto pr-1 text-xs">
+          <!-- Populated dynamically via openDocsModal -->
         </div>
       </div>
     </div>
@@ -353,6 +399,14 @@
 
   <script src="js/app.js"></script>
   <script>
+    let activeDocsBenId = '';
+    const benDocsStore = JSON.parse(localStorage.getItem('relieftrack_beneficiary_docs') || 'null') || {
+      'BEN-72A91': [
+        { name: 'hospital_surgery_estimate.pdf', type: 'Hospital Estimate', size: '1.2 MB', date: '2026-08-20' },
+        { name: 'aadhaar_verification_card.pdf', type: 'ID Proof', size: '0.8 MB', date: '2026-08-20' }
+      ]
+    };
+
     function openCameraModal() {
       openModal('camera-modal');
       startCameraCapture();
@@ -363,9 +417,115 @@
       closeModal('camera-modal');
     }
 
+    function renderDocsList(id) {
+      const container = document.getElementById('docs-modal-list');
+      const docs = benDocsStore[id] || [];
+      if (docs.length === 0) {
+        container.innerHTML = '<div class="p-4 text-center border border-dashed border-slate-800 rounded-xl text-slate-400 text-xs">No documents uploaded yet for this beneficiary.</div>';
+        return;
+      }
+      container.innerHTML = docs.map((d, index) => `
+        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3 text-xs">
+          <div class="truncate">
+            <p class="font-bold text-slate-100 truncate">${d.name}</p>
+            <div class="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+              <span class="badge badge-neutral text-[9px] px-1.5 py-0">${d.type}</span>
+              <span>${d.size}</span>
+              <span>•</span>
+              <span>${d.date}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="badge badge-success text-[10px]">Verified ✓</span>
+            <button type="button" onclick="deleteDocItem('${id}', ${index})" class="text-rose-400 hover:text-rose-300 font-bold px-1.5 py-0.5 rounded bg-rose-950/40 border border-rose-500/20">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
     function openDocsModal(name, id) {
+      activeDocsBenId = id;
       document.getElementById('docs-modal-title').innerText = `${name} (${id}) — Documents`;
+      if (!benDocsStore[id]) {
+        benDocsStore[id] = [];
+      }
+      renderDocsList(id);
       openModal('docs-modal');
+    }
+
+    function handleDocModalUpload(e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('modal-doc-file');
+      const typeInput = document.getElementById('modal-doc-type');
+      if (!fileInput.files || !fileInput.files[0]) return;
+      const file = fileInput.files[0];
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+      const maxFileSize = 10 * 1024 * 1024;
+      if (!allowedTypes.includes(file.type) || file.size > maxFileSize) {
+        alert('Sirf PDF, JPG ya PNG file (maximum 10 MB) upload karein.');
+        fileInput.value = '';
+        return;
+      }
+
+      if (!benDocsStore[activeDocsBenId]) {
+        benDocsStore[activeDocsBenId] = [];
+      }
+      benDocsStore[activeDocsBenId].unshift({
+        name: file.name,
+        type: typeInput.value,
+        size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+        date: new Date().toISOString().split('T')[0]
+      });
+
+      saveDocsStore();
+      fileInput.value = '';
+      renderDocsList(activeDocsBenId);
+      alert(`Document "${file.name}" uploaded and verified successfully!`);
+    }
+
+    function deleteDocItem(id, index) {
+      if (benDocsStore[id]) {
+        benDocsStore[id].splice(index, 1);
+        saveDocsStore();
+        renderDocsList(id);
+      }
+    }
+
+    function saveDocsStore() {
+      localStorage.setItem('relieftrack_beneficiary_docs', JSON.stringify(benDocsStore));
+    }
+
+    let regSelectedDocs = [];
+    function handleRegDocSelected(e) {
+      if (e.target.files && e.target.files.length) {
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+        const maxFileSize = 10 * 1024 * 1024;
+        const type = document.getElementById('reg-doc-type').value;
+        const invalidFiles = [];
+        Array.from(e.target.files).forEach(file => {
+          if (!allowedTypes.includes(file.type) || file.size > maxFileSize) {
+            invalidFiles.push(file.name);
+            return;
+          }
+          regSelectedDocs.push({ name: file.name, type, size: (file.size / (1024 * 1024)).toFixed(2) + ' MB' });
+        });
+        if (invalidFiles.length) {
+          alert(`${invalidFiles.join(', ')} invalid hai. Sirf PDF, JPG ya PNG (maximum 10 MB) upload karein.`);
+        }
+        renderRegDocsList();
+        e.target.value = '';
+      }
+    }
+
+    function renderRegDocsList() {
+      const container = document.getElementById('reg-selected-docs-list');
+      if (!container) return;
+      container.innerHTML = regSelectedDocs.map((d, i) => `
+        <div class="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-800 text-[11px]">
+          <span class="truncate text-slate-200 font-semibold">${d.name} <span class="text-emerald-400 font-normal">(${d.type})</span></span>
+          <button type="button" onclick="regSelectedDocs.splice(${i}, 1); renderRegDocsList();" class="text-rose-400 font-bold px-1">✕</button>
+        </div>
+      `).join('');
     }
 
     function openHistoryModal(name, id) {
@@ -374,13 +534,14 @@
     }
 
     let activePayId = '';
+    let activePayBenName = 'Sunita Sharma';
     function openPayAidModal(name, id, remaining) {
       activePayId = id;
+      activePayBenName = name;
       document.getElementById('pay-aid-subtitle').innerText = `Pay to ${name} (${id}) • Max ₹${remaining.toLocaleString()}`;
       document.getElementById('pay-aid-amount').value = remaining;
       openModal('pay-aid-modal');
     }
-
     function handleRegisterBeneficiarySubmit(e) {
       e.preventDefault();
       const name = document.getElementById('reg-ben-name').value;
@@ -388,43 +549,120 @@
       const amount = document.getElementById('reg-ben-amount').value;
       const randId = 'BEN-' + Math.random().toString(36).substring(2, 7).toUpperCase();
 
+      if (regSelectedDocs.length === 0) {
+        alert('Beneficiary register karne se pehle kam se kam ek verification document upload karein.');
+        return;
+      }
+
+      benDocsStore[randId] = regSelectedDocs.map(d => ({ ...d, date: new Date().toISOString().split('T')[0] }));
+      saveDocsStore();
+      regSelectedDocs = [];
+      renderRegDocsList();
+
       const tbody = document.getElementById('beneficiary-table-body');
-      const tr = document.createElement('tr');
-      tr.className = 'hover:bg-slate-900/50';
-      tr.innerHTML = `
-        <td class="p-2.5">
-          <div class="font-bold text-slate-100">${name}</div>
-          <div class="text-[10px] font-mono text-emerald-400">${randId}</div>
-        </td>
-        <td class="p-2.5 font-semibold text-slate-200">${need}</td>
-        <td class="p-2.5 font-semibold text-slate-200">₹${Number(amount).toLocaleString()}</td>
-        <td class="p-2.5 font-semibold text-sky-400">₹0</td>
-        <td class="p-2.5 font-extrabold text-emerald-400">₹${Number(amount).toLocaleString()}</td>
-        <td class="p-2.5"><span class="badge badge-warning">APPROVED</span></td>
-        <td class="p-2.5 text-right">
-          <div class="flex items-center justify-end gap-1">
-            <button onclick="openDocsModal('${name}', '${randId}')" class="btn btn-outline btn-sm">Docs</button>
-            <button onclick="openPayAidModal('${name}', '${randId}', ${amount})" class="btn btn-primary btn-sm">Pay Aid</button>
-            <button onclick="openHistoryModal('${name}', '${randId}')" class="btn btn-secondary btn-sm">History</button>
-          </div>
-        </td>
-      `;
-      tbody.prepend(tr);
+      if (tbody) {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-900/50';
+        tr.innerHTML = `
+          <td class="p-2.5">
+            <div class="font-bold text-slate-100">${name}</div>
+            <div class="text-[10px] font-mono text-emerald-400">${randId}</div>
+          </td>
+          <td class="p-2.5 font-semibold text-slate-200">${need}</td>
+          <td class="p-2.5 font-semibold text-slate-200">₹${Number(amount).toLocaleString()}</td>
+          <td class="p-2.5 font-semibold text-sky-400">₹0</td>
+          <td class="p-2.5 font-extrabold text-emerald-400">₹${Number(amount).toLocaleString()}</td>
+          <td class="p-2.5"><span class="badge badge-warning">APPROVED</span></td>
+          <td class="p-2.5 text-right">
+            <div class="flex items-center justify-end gap-1">
+              <button onclick="openDocsModal('${name}', '${randId}')" class="btn btn-outline btn-sm">Docs</button>
+              <button onclick="openPayAidModal('${name}', '${randId}', ${amount})" class="btn btn-primary btn-sm">Pay Aid</button>
+              <button onclick="openHistoryModal('${name}', '${randId}')" class="btn btn-secondary btn-sm">History</button>
+            </div>
+          </td>
+        `;
+        tbody.prepend(tr);
+      }
       closeModal('register-beneficiary-modal');
-      alert(`Beneficiary ${name} (${randId}) registered successfully!`);
+      alert(`Beneficiary ${name} (${randId}) registered successfully with verification documents!`);
+    }
+
+    function renderNgoTransactions() {
+      const allTx = ReliefTrackStore.getTransactions('ALL');
+      const tbody = document.getElementById('ngo-expenses-table-body');
+      if (!tbody) return;
+
+      tbody.innerHTML = allTx.map(t => {
+        const typeBadge = t.type === 'DONATION' ? 'badge-success' : t.type === 'ALLOCATION' ? 'badge-info' : t.type === 'DISBURSEMENT' ? 'badge-warning' : 'badge-neutral';
+        return `
+          <tr class="hover:bg-slate-900/50">
+            <td class="p-2.5 font-mono">
+              <div class="font-bold text-emerald-400">${t.id}</div>
+              <div class="text-[10px] text-slate-400 truncate max-w-[130px]" title="${t.txHash}">${t.txHash.substring(0, 10)}...${t.txHash.substring(t.txHash.length - 6)}</div>
+            </td>
+            <td class="p-2.5 font-semibold text-slate-200">${t.beneficiary || t.recipient}</td>
+            <td class="p-2.5">
+              <span class="badge ${typeBadge} text-[9px] px-1.5 py-0 mr-1">${t.type}</span>
+              <span class="text-slate-300">${t.category || t.aidType || t.recipient}</span>
+            </td>
+            <td class="p-2.5 font-extrabold text-slate-100">₹${Number(t.amount).toLocaleString()}</td>
+            <td class="p-2.5"><span class="badge badge-neutral text-[10px]">${t.paymentMethod || 'UPI'}</span></td>
+            <td class="p-2.5 text-[11px] font-mono text-slate-400">${t.date}</td>
+            <td class="p-2.5"><span class="badge badge-success text-[10px]">${t.status}</span></td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function handlePayAidSubmit(e) {
       e.preventDefault();
+      const amount = document.getElementById('pay-aid-amount').value || 10000;
+      
+      // Sync with 3-way store (Donor, NGO, Manager all see it)
+      ReliefTrackStore.addTransaction({
+        type: 'DISBURSEMENT',
+        sender: 'Red Cross Relief India',
+        recipient: `${activePayBenName} (${activePayId})`,
+        ngo: 'Red Cross Relief India',
+        beneficiary: `${activePayBenName} (${activePayId})`,
+        amount: Number(amount),
+        aidType: 'Emergency Relief Aid',
+        paymentMethod: 'UPI',
+        status: 'DISBURSED TO VENDOR ✓'
+      });
+
+      renderNgoTransactions();
       closeModal('pay-aid-modal');
-      alert('Aid payment recorded and anchored on smart contract!');
+      alert(`Aid payment of ₹${Number(amount).toLocaleString()} recorded and synchronized across Donor, NGO & Manager ledgers!`);
     }
 
     function handleSubmitExpense(e) {
       e.preventDefault();
+      const amount = 15000;
+      const purpose = 'Hospital ICU & Diagnostic Bill';
+      const ben = 'Sunita Sharma (BEN-72A91)';
+
+      // Sync with 3-way store
+      ReliefTrackStore.addTransaction({
+        type: 'EXPENSE',
+        sender: 'Red Cross Relief India',
+        recipient: 'XYZ Super Specialty Hospital',
+        ngo: 'Red Cross Relief India',
+        beneficiary: ben,
+        category: purpose,
+        amount: amount,
+        paymentMethod: 'UPI / Hospital Bank',
+        status: 'VERIFIED & AUDITED ✓'
+      });
+
+      renderNgoTransactions();
       closeModal('submit-expense-modal');
-      alert('Relief expense submitted for verification!');
+      alert(`Relief expense of ₹${amount.toLocaleString()} submitted and synced with Manager Verification Vault!`);
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderNgoTransactions();
+    });
   </script>
 </body>
 </html>

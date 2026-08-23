@@ -6,6 +6,222 @@
 (function () {
   'use strict';
 
+  // --- Centralized Shared Data Store (Synchronized across Donor, NGO, Manager) ---
+  window.ReliefTrackStore = {
+    // Initial users (Donors & NGOs)
+    defaultUsers: [
+      {
+        id: 'USR-DON-101',
+        name: 'Rahul Sharma',
+        role: 'DONOR',
+        email: 'rahul.sharma@example.com',
+        phone: '+91 98765 43210',
+        credentials: 'Individual KYC Verified',
+        status: 'ACTIVE',
+        totalDonated: 85000,
+        joinedDate: '2026-08-10',
+        wallet: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
+      },
+      {
+        id: 'USR-DON-102',
+        name: 'Priya Verma',
+        role: 'DONOR',
+        email: 'priya.verma@techcorp.org',
+        phone: '+91 91234 56789',
+        credentials: 'CSR Corporate Donor',
+        status: 'ACTIVE',
+        totalDonated: 35000,
+        joinedDate: '2026-08-15',
+        wallet: '0x3F4b89A002b545dE434914197e93700b659c41E5'
+      },
+      {
+        id: 'USR-NGO-201',
+        name: 'Red Cross Relief India',
+        role: 'NGO',
+        email: 'contact@redcrossindia.org',
+        phone: '+91 98221 00112',
+        ngoCode: 'NGO-1042',
+        regNumber: '80G-AAATC1234F2026',
+        credentials: '80G / FCRA Registered',
+        status: 'VERIFIED ✓',
+        joinedDate: '2026-07-20',
+        wallet: '0x8a7291bc44f128e932104975193a218f77361a90'
+      },
+      {
+        id: 'USR-NGO-202',
+        name: 'Care Foundation India',
+        role: 'NGO',
+        email: 'info@carefoundation.in',
+        phone: '+91 98334 11223',
+        ngoCode: 'NGO-2089',
+        regNumber: '80G-DELC9876K2025',
+        credentials: '80G / FCRA Registered',
+        status: 'VERIFIED ✓',
+        joinedDate: '2026-08-01',
+        wallet: '0x99A8b11D001eA7F8548972E21013442A042784d1'
+      }
+    ],
+
+    // Initial 3-way transactions ledger
+    defaultTransactions: [
+      {
+        id: 'TX-DON-2026-8F72',
+        type: 'DONATION',
+        sender: 'Rahul Sharma (Donor)',
+        recipient: 'Emergency Medical Relief Campaign 2026',
+        ngo: 'Red Cross Relief India',
+        beneficiary: 'Sunita Sharma (BEN-72A91)',
+        amount: 10000,
+        paymentMethod: 'UPI',
+        txHash: '0x8a7291bc44f128e932104975193a218f77361a90c4217734891a274191bc44f1',
+        status: 'CONFIRMED ON-CHAIN ✓',
+        date: '2026-08-22 10:21'
+      },
+      {
+        id: 'TX-ALLOC-2026-91A7',
+        type: 'ALLOCATION',
+        sender: 'Manager Auditor (Pool)',
+        recipient: 'Red Cross Relief India (NGO-1042)',
+        ngo: 'Red Cross Relief India',
+        beneficiary: 'Sunita Sharma (BEN-72A91)',
+        amount: 8500,
+        paymentMethod: 'Pool Allocation',
+        txHash: '0x991823abf772183e910293a8172bc9102931bc77261a90c4217734891a274191',
+        status: 'APPROVED & LOCKED',
+        date: '2026-08-22 11:18'
+      },
+      {
+        id: 'TX-AID-2026-0012',
+        type: 'DISBURSEMENT',
+        sender: 'Red Cross Relief India',
+        recipient: 'Sunita Sharma (BEN-72A91)',
+        ngo: 'Red Cross Relief India',
+        beneficiary: 'Sunita Sharma (BEN-72A91)',
+        amount: 15000,
+        aidType: 'Medical Surgery Advance',
+        paymentMethod: 'UPI',
+        txHash: '0x77f92a10c92138e9182b881a72019b88271a920b771629a810293481029a8712',
+        status: 'DISBURSED TO VENDOR ✓',
+        date: '2026-08-22 12:45'
+      },
+      {
+        id: 'TX-EXP-2026-77A2',
+        type: 'EXPENSE',
+        sender: 'Red Cross Relief India',
+        recipient: 'XYZ Super Specialty Hospital',
+        ngo: 'Red Cross Relief India',
+        beneficiary: 'Sunita Sharma (BEN-72A91)',
+        amount: 6500,
+        category: 'Surgical OT Charges & Diagnostic',
+        paymentMethod: 'Bank Transfer',
+        txHash: '0x38a192b0c91823abf772183e910293a8172bc9102931bc77261a90c421773489',
+        status: 'VERIFIED & AUDITED ✓',
+        date: '2026-08-22 14:10'
+      },
+      {
+        id: 'TX-DON-2026-99A1',
+        type: 'DONATION',
+        sender: 'Priya Verma (Donor)',
+        recipient: 'Flood Disaster Reconstruction & Aid',
+        ngo: 'Care Foundation India',
+        beneficiary: 'Ramesh Kumar (BEN-88B14)',
+        amount: 25000,
+        paymentMethod: 'Credit Card',
+        txHash: '0x55c182a901823b771629a810293481029a87120x8a7291bc44f128e93210497519',
+        status: 'CONFIRMED ON-CHAIN ✓',
+        date: '2026-08-21 16:30'
+      }
+    ],
+
+    // User Operations
+    getUsers: function (roleFilter) {
+      try {
+        const stored = localStorage.getItem('relieftrack_all_users');
+        const users = stored ? JSON.parse(stored) : this.defaultUsers;
+        if (!stored) localStorage.setItem('relieftrack_all_users', JSON.stringify(this.defaultUsers));
+        if (roleFilter && roleFilter !== 'ALL') {
+          return users.filter(u => u.role === roleFilter);
+        }
+        return users;
+      } catch (e) {
+        return this.defaultUsers;
+      }
+    },
+
+    registerUser: function (userData) {
+      const users = this.getUsers();
+      const newId = userData.role === 'DONOR' 
+        ? 'USR-DON-' + Math.floor(100 + Math.random() * 900)
+        : userData.role === 'NGO'
+          ? 'USR-NGO-' + Math.floor(200 + Math.random() * 800)
+          : 'USR-MGR-' + Math.floor(300 + Math.random() * 700);
+
+      const newUser = {
+        id: newId,
+        name: userData.name || 'Anonymous User',
+        role: userData.role || 'DONOR',
+        email: userData.email,
+        phone: userData.phone || '',
+        ngoCode: userData.role === 'NGO' ? 'NGO-' + Math.floor(1000 + Math.random() * 9000) : undefined,
+        regNumber: userData.regNumber || (userData.role === 'NGO' ? '80G-TEMP' + Math.floor(1000 + Math.random() * 9000) : undefined),
+        credentials: userData.role === 'NGO' ? '80G / FCRA Registered' : 'Individual KYC Verified',
+        status: userData.role === 'NGO' ? 'VERIFIED ✓' : 'ACTIVE',
+        totalDonated: 0,
+        joinedDate: new Date().toISOString().split('T')[0],
+        wallet: userData.wallet || '0x' + Math.random().toString(16).substring(2, 10) + '...' + Math.random().toString(16).substring(2, 6)
+      };
+
+      users.unshift(newUser);
+      localStorage.setItem('relieftrack_all_users', JSON.stringify(users));
+      return newUser;
+    },
+
+    // Transaction Operations (3-way visibility)
+    getTransactions: function (typeFilter) {
+      try {
+        const stored = localStorage.getItem('relieftrack_all_transactions');
+        const list = stored ? JSON.parse(stored) : this.defaultTransactions;
+        if (!stored) localStorage.setItem('relieftrack_all_transactions', JSON.stringify(this.defaultTransactions));
+        if (typeFilter && typeFilter !== 'ALL') {
+          return list.filter(t => t.type === typeFilter);
+        }
+        return list;
+      } catch (e) {
+        return this.defaultTransactions;
+      }
+    },
+
+    addTransaction: function (txData) {
+      const list = this.getTransactions();
+      const randHash = '0x' + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('');
+      const randId = 'TX-' + (txData.type ? txData.type.substring(0, 3) : 'GEN') + '-2026-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+      const newTx = {
+        id: txData.id || randId,
+        type: txData.type || 'DONATION',
+        sender: txData.sender || 'Anonymous Donor',
+        recipient: txData.recipient || 'Relief Fund Pool',
+        ngo: txData.ngo || 'Red Cross Relief India',
+        beneficiary: txData.beneficiary || 'Sunita Sharma (BEN-72A91)',
+        amount: Number(txData.amount) || 5000,
+        paymentMethod: txData.paymentMethod || 'UPI',
+        category: txData.category,
+        aidType: txData.aidType,
+        txHash: txData.txHash || randHash,
+        status: txData.status || 'CONFIRMED ON-CHAIN ✓',
+        date: new Date().toISOString().replace('T', ' ').substring(0, 16)
+      };
+
+      list.unshift(newTx);
+      localStorage.setItem('relieftrack_all_transactions', JSON.stringify(list));
+      return newTx;
+    }
+  };
+
+  // Initialize store immediately
+  window.ReliefTrackStore.getUsers();
+  window.ReliefTrackStore.getTransactions();
+
   // --- Session & Role Management ---
   window.ReliefTrack = {
     getSession: function () {

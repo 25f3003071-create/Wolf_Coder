@@ -98,8 +98,8 @@
       <div class="lg:col-span-2 space-y-6">
         <div class="card-panel">
           <div class="mb-4">
-            <h3 class="text-base font-bold text-slate-100">Recent Donation Receipts</h3>
-            <p class="text-slate-400 text-xs">Click any receipt to open its delivery tracking timeline</p>
+            <h3 class="text-base font-bold text-slate-100">My Donation Receipts</h3>
+            <p class="text-slate-400 text-xs">Click any receipt to open its immutable delivery tracking timeline</p>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-slate-300">
@@ -113,20 +113,38 @@
                 </tr>
               </thead>
               <tbody id="donor-receipts-body" class="divide-y divide-slate-800/80 font-medium">
-                <tr class="hover:bg-slate-900/50">
-                  <td class="p-2.5 font-mono font-bold text-emerald-400">DR-2026-8F72K9</td>
-                  <td class="p-2.5">Emergency Medical Relief 2026</td>
-                  <td class="p-2.5 font-extrabold text-slate-100">₹10,000</td>
-                  <td class="p-2.5"><span class="badge badge-warning">Aid Delivery ◉</span></td>
-                  <td class="p-2.5 text-right"><a href="track.html?receiptId=DR-2026-8F72K9" class="btn btn-outline btn-sm">Track</a></td>
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3-Way Shared Transparency Ledger (Visible to Donor, NGO, Manager) -->
+        <div class="card-panel">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                3-Way Ecosystem Transparency Ledger (Live Stream)
+              </h3>
+              <p class="text-slate-400 text-xs">Full transparency: trace donations from donor contribution to NGO allocation and hospital disbursement</p>
+            </div>
+            <span class="badge badge-success text-[10px]">3-Way Sync: ON</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-slate-300">
+              <thead class="text-[11px] uppercase bg-slate-950/60 text-slate-400 border-b border-slate-800">
+                <tr>
+                  <th class="p-2.5">Tx ID &amp; Hash</th>
+                  <th class="p-2.5">Type</th>
+                  <th class="p-2.5">From</th>
+                  <th class="p-2.5">To / Purpose</th>
+                  <th class="p-2.5">Amount</th>
+                  <th class="p-2.5">Status</th>
                 </tr>
-                <tr class="hover:bg-slate-900/50">
-                  <td class="p-2.5 font-mono font-bold text-emerald-400">DR-2026-99A12B</td>
-                  <td class="p-2.5">Flood Reconstruction Aid</td>
-                  <td class="p-2.5 font-extrabold text-slate-100">₹25,000</td>
-                  <td class="p-2.5"><span class="badge badge-success">Completed ✓</span></td>
-                  <td class="p-2.5 text-right"><a href="track.html?receiptId=DR-2026-99A12B" class="btn btn-outline btn-sm">Track</a></td>
-                </tr>
+              </thead>
+              <tbody id="donor-shared-ledger-body" class="divide-y divide-slate-800/80 font-medium text-xs">
+                <!-- Dynamically populated -->
               </tbody>
             </table>
           </div>
@@ -295,6 +313,51 @@
   <script>
     let activeAmount = 10000;
     let activeCampaign = "Emergency Medical Relief Campaign 2026";
+    let activeMethod = "UPI";
+
+    function renderDonorTables() {
+      const allTx = ReliefTrackStore.getTransactions('ALL');
+      const donations = allTx.filter(t => t.type === 'DONATION');
+
+      // Render My Donations
+      const receiptsBody = document.getElementById('donor-receipts-body');
+      if (receiptsBody) {
+        if (donations.length === 0) {
+          receiptsBody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400">No donation receipts yet. Make your first contribution!</td></tr>';
+        } else {
+          receiptsBody.innerHTML = donations.map(d => `
+            <tr class="hover:bg-slate-900/50">
+              <td class="p-2.5 font-mono font-bold text-emerald-400">${d.id.replace('TX-', 'DR-')}</td>
+              <td class="p-2.5">${d.recipient}</td>
+              <td class="p-2.5 font-extrabold text-slate-100">₹${Number(d.amount).toLocaleString()}</td>
+              <td class="p-2.5"><span class="badge badge-success">${d.status}</span></td>
+              <td class="p-2.5 text-right"><a href="track.html?receiptId=${d.id.replace('TX-', 'DR-')}" class="btn btn-outline btn-sm">Track</a></td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      // Render 3-Way Ecosystem Transparency Ledger
+      const sharedBody = document.getElementById('donor-shared-ledger-body');
+      if (sharedBody) {
+        sharedBody.innerHTML = allTx.map(t => {
+          const typeBadge = t.type === 'DONATION' ? 'badge-success' : t.type === 'ALLOCATION' ? 'badge-info' : t.type === 'DISBURSEMENT' ? 'badge-warning' : 'badge-neutral';
+          return `
+            <tr class="hover:bg-slate-900/50">
+              <td class="p-2.5 font-mono">
+                <div class="font-bold text-slate-100">${t.id}</div>
+                <div class="text-[10px] text-emerald-400 truncate max-w-[120px]" title="${t.txHash}">${t.txHash.substring(0, 10)}...</div>
+              </td>
+              <td class="p-2.5"><span class="badge ${typeBadge} text-[9px] px-1.5 py-0">${t.type}</span></td>
+              <td class="p-2.5 text-slate-200">${t.sender}</td>
+              <td class="p-2.5 text-slate-300">${t.recipient || t.beneficiary}</td>
+              <td class="p-2.5 font-extrabold text-emerald-400">₹${Number(t.amount).toLocaleString()}</td>
+              <td class="p-2.5"><span class="badge badge-success text-[9px] px-1.5 py-0">${t.status}</span></td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
 
     function handleProceedPayment(e) {
       e.preventDefault();
@@ -310,27 +373,36 @@
     }
 
     function simulatePaymentSuccess() {
-      const randId = 'DR-2026-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-      document.getElementById('created-receipt-id').innerText = randId;
-      document.getElementById('created-receipt-amount').innerText = `₹${Number(activeAmount).toLocaleString()}`;
-      document.getElementById('track-created-btn').href = `track.html?receiptId=${randId}`;
+      const randReceiptId = 'DR-2026-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      const randTxHash = '0x' + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('');
 
-      // Add to recent table
-      const tbody = document.getElementById('donor-receipts-body');
-      const tr = document.createElement('tr');
-      tr.className = 'hover:bg-slate-900/50';
-      tr.innerHTML = `
-        <td class="p-2.5 font-mono font-bold text-emerald-400">${randId}</td>
-        <td class="p-2.5">${activeCampaign}</td>
-        <td class="p-2.5 font-extrabold text-slate-100">₹${Number(activeAmount).toLocaleString()}</td>
-        <td class="p-2.5"><span class="badge badge-warning">Donation Created ◉</span></td>
-        <td class="p-2.5 text-right"><a href="track.html?receiptId=${randId}" class="btn btn-outline btn-sm">Track</a></td>
-      `;
-      tbody.prepend(tr);
+      // Add to 3-way shared store
+      ReliefTrackStore.addTransaction({
+        id: randReceiptId.replace('DR-', 'TX-DON-'),
+        type: 'DONATION',
+        sender: 'Rahul Sharma (Donor)',
+        recipient: activeCampaign,
+        ngo: 'Red Cross Relief India',
+        beneficiary: 'Sunita Sharma (BEN-72A91)',
+        amount: Number(activeAmount),
+        paymentMethod: activeMethod || 'UPI',
+        txHash: randTxHash,
+        status: 'CONFIRMED ON-CHAIN ✓'
+      });
+
+      document.getElementById('created-receipt-id').innerText = randReceiptId;
+      document.getElementById('created-receipt-amount').innerText = `₹${Number(activeAmount).toLocaleString()}`;
+      document.getElementById('track-created-btn').href = `track.html?receiptId=${randReceiptId}`;
+
+      renderDonorTables();
 
       document.getElementById('payment-form-content').classList.add('hidden');
       document.getElementById('payment-success-content').classList.remove('hidden');
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderDonorTables();
+    });
   </script>
 </body>
 </html>
